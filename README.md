@@ -13,5 +13,5 @@ ___
 - Запустите приложение командой `flutter run`
 
 ### Иллюстрации:
-![Иллюстрация к проекту](https://github.com/sonixkd/counter_app/raw/${{branch}}/image/gif_count.gif)
+![Иллюстрация к проекту](https://github.com/sonixkd/counter_app/raw/main/image/gif_count.gif)
 ___
