@@ -1,4 +1,4 @@
-## Counter App
+# Counter App
 ___
 ### Описание:
 Простое мобильное приложение на Flutter для подсчёта значения на экране с сохранением результата
@@ -13,5 +13,5 @@ ___
 - Запустите приложение командой `flutter run`
 
 ### Иллюстрации
-![Иллюстрация к проекту](https://github.com/sonixkd/)
+![Иллюстрация к проекту](https://github.com/sonixkd/counter_app/blob/feature/image/gif_count.gif)
 ___
