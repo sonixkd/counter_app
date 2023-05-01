@@ -3,32 +3,73 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class ViewModel extends ChangeNotifier {
+class User {
   int _age = 0;
   int get age => _age;
+  set age(int value) => _age = value;
+
+  User(this._age);
+}
+
+class UserServise {
+  var _user = User(0);
+  User get user => _user;
+
+  Future<void> loadAge() async {
+    final sharedPreferences = await SharedPreferences.getInstance();
+    final age = sharedPreferences.getInt('age') ?? 0;
+    _user = User(age);
+  }
+
+  Future<void> saveAge() async {
+    final sharedPreferences = await SharedPreferences.getInstance();
+    sharedPreferences.setInt('age', _user.age);
+  }
+
+  void incrementAge() {
+    _user.age++;
+    saveAge();
+  }
+
+  void decrementAge() {
+    _user.age = max(_user.age - 1, 0);
+    saveAge();
+  }
+}
+
+class ViewModelstate {
+  String ageTitle;
+  ViewModelstate({required this.ageTitle});
+}
+
+class ViewModel extends ChangeNotifier {
+  final _userService = UserServise();
+  var _state = ViewModelstate(ageTitle: '');
+  ViewModelstate get state => _state;
+
+  void _updateState() {
+    final user = _userService.user;
+    _state = ViewModelstate(ageTitle: user.age.toString());
+    notifyListeners();
+  }
+
+  void loadAge() async {
+    await _userService.loadAge();
+    _updateState();
+  }
 
   ViewModel() {
     loadAge();
   }
 
-  void loadAge() async {
-    final sharedPreferences = await SharedPreferences.getInstance();
-    _age = sharedPreferences.getInt('age') ?? 0;
-    notifyListeners();
+  void onIncrementButtonPressed() {
+    _userService.incrementAge();
+    _updateState();
   }
 
-  void incrementAge() async {
-    _age++;
-    final sharedPreferences = await SharedPreferences.getInstance();
-    sharedPreferences.setInt('age', _age);
-    notifyListeners();
-  }
-
-  void decrementAge() async {
-    _age = max(age - 1, 0);
-    final sharedPreferences = await SharedPreferences.getInstance();
-    sharedPreferences.setInt('age', _age);
-    notifyListeners();
+  void onDerementButtonPressed() {
+    _userService.decrementAge();
+    _updateState();
   }
 }
 
@@ -58,8 +99,8 @@ class _AgeTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.select((ViewModel value) => value.age);
-    return Text(viewModel.toString());
+    final viewModel = context.select((ViewModel value) => value.state.ageTitle);
+    return Text(viewModel);
   }
 }
 
@@ -70,7 +111,7 @@ class _AgeIncrementWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final viewModel = context.read<ViewModel>();
     return ElevatedButton(
-      onPressed: viewModel.incrementAge,
+      onPressed: viewModel.onIncrementButtonPressed,
       child: Text('+'),
     );
   }
@@ -83,7 +124,7 @@ class _AgeDecrementWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final viewModel = context.read<ViewModel>();
     return ElevatedButton(
-      onPressed: viewModel.decrementAge,
+      onPressed: viewModel.onDerementButtonPressed,
       child: Text('-'),
     );
   }
