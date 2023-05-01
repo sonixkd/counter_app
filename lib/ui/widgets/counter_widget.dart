@@ -1,34 +1,45 @@
-import 'dart:math';
+import 'package:counter_app/domain/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+class ViewModelstate {
+  String ageTitle;
+  ViewModelstate({required this.ageTitle});
+}
 
 class ViewModel extends ChangeNotifier {
-  int _age = 0;
-  int get age => _age;
+  final _userService = UserServise();
+  var _state = ViewModelstate(ageTitle: '');
+  ViewModelstate get state => _state;
+
+  void _updateState() {
+    final user = _userService.user;
+    _state = ViewModelstate(ageTitle: user.age.toString());
+    notifyListeners();
+  }
+
+  void loadAge() async {
+    await _userService.initialization();
+    _updateState();
+  }
 
   ViewModel() {
     loadAge();
   }
 
-  void loadAge() async {
-    final sharedPreferences = await SharedPreferences.getInstance();
-    _age = sharedPreferences.getInt('age') ?? 0;
-    notifyListeners();
+  void onIncrementButtonPressed() {
+    _userService.incrementAge();
+    _updateState();
   }
 
-  void incrementAge() async {
-    _age++;
-    final sharedPreferences = await SharedPreferences.getInstance();
-    sharedPreferences.setInt('age', _age);
-    notifyListeners();
+  void onDerementButtonPressed() {
+    _userService.decrementAge();
+    _updateState();
   }
 
-  void decrementAge() async {
-    _age = max(age - 1, 0);
-    final sharedPreferences = await SharedPreferences.getInstance();
-    sharedPreferences.setInt('age', _age);
-    notifyListeners();
+  void onResetButtonPressed() {
+    _userService.resetAge();
+    _updateState();
   }
 }
 
@@ -41,10 +52,19 @@ class CounterWidget extends StatelessWidget {
         child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: const [
+            children: [
               _AgeTitle(),
-              _AgeIncrementWidget(),
-              _AgeDecrementWidget(),
+              SizedBox(height: 50),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _AgeIncrementWidget(),
+                  SizedBox(width: 20),
+                  _AgeDecrementWidget(),
+                ],
+              ),
+              SizedBox(height: 10),
+              _AgeResetWidget(),
             ],
           ),
         ),
@@ -54,37 +74,67 @@ class CounterWidget extends StatelessWidget {
 }
 
 class _AgeTitle extends StatelessWidget {
-  const _AgeTitle({super.key});
+  const _AgeTitle();
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.select((ViewModel value) => value.age);
-    return Text(viewModel.toString());
+    final viewModel = context.select((ViewModel value) => value.state.ageTitle);
+    return Text(
+      viewModel,
+      style: TextStyle(fontSize: 70),
+    );
   }
 }
 
 class _AgeIncrementWidget extends StatelessWidget {
-  const _AgeIncrementWidget({super.key});
+  const _AgeIncrementWidget();
 
   @override
   Widget build(BuildContext context) {
     final viewModel = context.read<ViewModel>();
     return ElevatedButton(
-      onPressed: viewModel.incrementAge,
+      onPressed: viewModel.onIncrementButtonPressed,
+      style: ElevatedButton.styleFrom(
+        textStyle: TextStyle(fontSize: 30),
+        backgroundColor: Colors.red,
+        padding: EdgeInsets.all(10),
+      ),
       child: Text('+'),
     );
   }
 }
 
 class _AgeDecrementWidget extends StatelessWidget {
-  const _AgeDecrementWidget({super.key});
+  const _AgeDecrementWidget();
 
   @override
   Widget build(BuildContext context) {
     final viewModel = context.read<ViewModel>();
     return ElevatedButton(
-      onPressed: viewModel.decrementAge,
+      onPressed: viewModel.onDerementButtonPressed,
+      style: ElevatedButton.styleFrom(
+        textStyle: TextStyle(fontSize: 30),
+        padding: EdgeInsets.all(10),
+      ),
       child: Text('-'),
+    );
+  }
+}
+
+class _AgeResetWidget extends StatelessWidget {
+  const _AgeResetWidget();
+
+  @override
+  Widget build(BuildContext context) {
+    final viewModel = context.read<ViewModel>();
+    return ElevatedButton(
+      onPressed: viewModel.onResetButtonPressed,
+      style: ElevatedButton.styleFrom(
+        textStyle: TextStyle(fontSize: 35),
+        backgroundColor: Color.fromARGB(255, 205, 21, 76),
+        padding: EdgeInsets.symmetric(horizontal: 30, vertical: 5),
+      ),
+      child: Text('Reset'),
     );
   }
 }
