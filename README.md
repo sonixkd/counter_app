@@ -12,6 +12,6 @@ ___
 - Установите зависимости командой `flutter pub get`
 - Запустите приложение командой `flutter run`
 
-### Иллюстрации
-![Иллюстрация к проекту](https://github.com/sonixkd/counter_app/blob/feature/image/gif_count.gif)
+### Иллюстрации:
+![Иллюстрация к проекту](https://github.com/sonixkd/counter_app/raw/{{branch}}/image/gif_count.gif)
 ___
