@@ -1,30 +1,39 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class CounterWidget extends StatefulWidget {
-  const CounterWidget({super.key});
+class ViewModel extends ChangeNotifier {
+  int _age = 0;
+  int get age => _age;
 
-  @override
-  State<CounterWidget> createState() => _CounterWidgetState();
-}
-
-class _CounterWidgetState extends State<CounterWidget> {
-  int age = 0;
-
-  void loadAge() async {
-    final sharedPreferences = await SharedPreferences.getInstance();
-    age = sharedPreferences.getInt('age') ?? 0;
-    setState(() {});
-  }
-
-  @override
-  void initState() {
-    super.initState();
-
+  ViewModel() {
     loadAge();
   }
 
+  void loadAge() async {
+    final sharedPreferences = await SharedPreferences.getInstance();
+    _age = sharedPreferences.getInt('age') ?? 0;
+    notifyListeners();
+  }
+
+  void incrementAge() async {
+    _age++;
+    final sharedPreferences = await SharedPreferences.getInstance();
+    sharedPreferences.setInt('age', _age);
+    notifyListeners();
+  }
+
+  void decrementAge() async {
+    _age = max(age - 1, 0);
+    final sharedPreferences = await SharedPreferences.getInstance();
+    sharedPreferences.setInt('age', _age);
+    notifyListeners();
+  }
+}
+
+class CounterWidget extends StatelessWidget {
+  const CounterWidget({super.key});
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -32,36 +41,50 @@ class _CounterWidgetState extends State<CounterWidget> {
         child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(age.toString()),
-              ElevatedButton(
-                onPressed: () async {
-                  age++;
-
-                  final sharedPreferences =
-                      await SharedPreferences.getInstance();
-                  sharedPreferences.setInt('age', age);
-
-                  setState(() {});
-                },
-                child: Text('+'),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  age = max(age - 1, 0);
-
-                  final sharedPreferences =
-                      await SharedPreferences.getInstance();
-                  sharedPreferences.setInt('age', age);
-
-                  setState(() {});
-                },
-                child: Text('-'),
-              )
+            children: const [
+              _AgeTitle(),
+              _AgeIncrementWidget(),
+              _AgeDecrementWidget(),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _AgeTitle extends StatelessWidget {
+  const _AgeTitle({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final viewModel = context.select((ViewModel value) => value.age);
+    return Text(viewModel.toString());
+  }
+}
+
+class _AgeIncrementWidget extends StatelessWidget {
+  const _AgeIncrementWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final viewModel = context.read<ViewModel>();
+    return ElevatedButton(
+      onPressed: viewModel.incrementAge,
+      child: Text('+'),
+    );
+  }
+}
+
+class _AgeDecrementWidget extends StatelessWidget {
+  const _AgeDecrementWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final viewModel = context.read<ViewModel>();
+    return ElevatedButton(
+      onPressed: viewModel.decrementAge,
+      child: Text('-'),
     );
   }
 }
